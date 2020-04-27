@@ -20,6 +20,7 @@ class Transaction(models.Model):
     Transaction Model
     Defines the attributes of a transaction
     """
+
     reference = models.CharField(max_length=30, unique=True)
     account = models.CharField(max_length=30)
     date = models.DateField()

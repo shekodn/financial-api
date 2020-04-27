@@ -2,8 +2,8 @@ import json
 from rest_framework import status
 from django.test import TestCase, Client
 from django.urls import reverse
-from ..models import User
-from ..serializers import UserSerializer
+from ..models import User, Transaction
+from ..serializers import UserSerializer, TransactionSerializer
 
 
 # initialize the APIClient app
@@ -77,3 +77,161 @@ class CreateNewUserTest(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class GetAllTransactionsTest(TestCase):
+    """
+    Test module for GET all transactions
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(name="user", age=1, email="user@example.com")
+        self.tx1 = Transaction.objects.create(
+            reference="001",
+            account="S00099",
+            date="2020-01-13",
+            amount=100.21,
+            type="inflow",
+            category="salary",
+            user=self.user,
+        )
+        self.tx2 = Transaction.objects.create(
+            reference="002",
+            account="S00099",
+            date="2020-01-13",
+            amount=-100.1,
+            type="outflow",
+            category="groceries",
+            user=self.user,
+        )
+
+    def test_get_all_transactions(self):
+        # get API response
+        response = client.get(reverse("get_post_transactions"))
+        transactions = Transaction.objects.all()
+        serializer = TransactionSerializer(transactions, many=True)
+        self.assertEqual(response.data, serializer.data)
+
+
+class GetSingleTransactionTest(TestCase):
+    """
+    Test module for GET single transaction
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(name="user", age=1, email="user@example.com")
+        self.tx1 = Transaction.objects.create(
+            reference="001",
+            account="S00099",
+            date="2020-01-13",
+            amount=100.21,
+            type="inflow",
+            category="salary",
+            user=self.user,
+        )
+
+    def test_get_valid_single_transaction(self):
+        response = client.get(
+            reverse("get_delete_put_transaction", kwargs={"pk": self.tx1.pk})
+        )
+        transaction = Transaction.objects.get(pk=self.tx1.pk)
+        serializer = TransactionSerializer(transaction)
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_invalid_single_transaction(self):
+        response = client.get(reverse("get_delete_put_transaction", kwargs={"pk": 999}))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class CreateNewTransactionTest(TestCase):
+    """
+    Test module for inserting a new transaction
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(name="user", age=18, email="user@example.com")
+        self.valid_payload = {
+            "reference": "000051",
+            "account": "S00099",
+            "date": "2020-01-13",
+            "amount": "-51.13",
+            "type": "outflow",
+            "category": "groceries",
+            "user_id": self.user.pk,
+        }
+        # missing user_id
+        self.invalid_payload = {
+            "reference": "007",
+            "account": "S00099",
+            "date": "2020-01-13",
+            "amount": "100.21",
+            "type": "inflow",
+            "category": "salary",
+        }
+        self.user2 = User.objects.create(
+            name="user2", age=28, email="user2@example.com"
+        )
+        self.tx1 = {
+            "reference": "000051",
+            "account": "C00099",
+            "date": "2020-01-03",
+            "amount": "-51.13",
+            "type": "outflow",
+            "category": "groceries",
+            "user_id": self.user2.pk,
+        }
+        self.tx2 = {
+            "reference": "000052",
+            "account": "C00099",
+            "date": "2020-01-10",
+            "amount": "2500.72",
+            "type": "inflow",
+            "category": "salary",
+            "user_id": self.user2.pk,
+        }
+        self.tx3 = {
+            "reference": "000053",
+            "account": "C00099",
+            "date": "2020-01-10",
+            "amount": "-150.72",
+            "type": "outflow",
+            "category": "transfer",
+            "user_id": self.user2.pk,
+        }
+        self.tx4 = {
+            "reference": "000054",
+            "account": "C00099",
+            "date": "2020-01-13",
+            "amount": "-560.00",
+            "type": "outflow",
+            "category": "rent",
+            "user_id": self.user2.pk,
+        }
+
+    def test_create_valid_transaction(self):
+
+        # Test DB should be empty
+        self.assertEquals(Transaction.objects.count(), 0)
+
+        # Attempts to create a transaction with an invalid Payload
+        response = self.client.post(
+            reverse("get_post_transactions"), data=self.valid_payload, format="json"
+        )
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(Transaction.objects.count(), 1)
+
+        # Asserts that the transaction we just created is the first transaction
+        transaction = Transaction.objects.first()
+        self.assertEquals(transaction.reference, self.valid_payload["reference"])
+
+    def test_create_invalid_transaction(self):
+
+        self.assertEquals(Transaction.objects.count(), 0)
+
+        # Attempts to create a transaction with an invalid payload
+        response = self.client.post(
+            reverse("get_post_transactions"), data=self.invalid_payload, format="json"
+        )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(Transaction.objects.count(), 0)
