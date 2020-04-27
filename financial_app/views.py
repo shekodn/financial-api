@@ -2,7 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Transaction
-from .serializers import UserSerializer, TransactionSerializer
+from .serializers import (
+    UserSerializer,
+    TransactionSerializer,
+    UserAccountSummarySerializer,
+)
 
 # User views
 @api_view(["GET", "DELETE", "PUT"])
@@ -85,3 +89,20 @@ def get_post_transactions(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Summary views
+@api_view()
+def get_user_account_summary(request, pk):
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        start_date = request.GET.get("start_date", "")
+        end_date = request.GET.get("end_date", "")
+        serializer = UserAccountSummarySerializer(
+            user, context={"start_date": start_date, "end_date": end_date}
+        )
+        return Response(serializer.data)

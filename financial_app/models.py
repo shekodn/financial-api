@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Sum, Case, When, F, DecimalField
+import datetime
 
 
 class User(models.Model):
@@ -13,6 +15,37 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.email} {self.age}"
+
+    def get_user_account_summary(self, start_date, end_date):
+        try:
+            start_date_obj = datetime.datetime.strptime(start_date, "%d-%m-%Y").date()
+            end_date_obj = datetime.datetime.strptime(end_date, "%d-%m-%Y").date()
+
+        except:
+            start_date_obj = datetime.date(datetime.MINYEAR, 1, 1)
+            end_date_obj = datetime.date(datetime.MAXYEAR, 12, 31)
+
+        return (
+            self.transactions.filter(date__range=[start_date_obj, end_date_obj])
+            .values("account")
+            .annotate(
+                total_inflow=Sum(
+                    Case(
+                        When(type="inflow", then=F("amount")),
+                        output_field=DecimalField(),
+                        default=0,
+                    )
+                ),
+                total_outflow=Sum(
+                    Case(
+                        When(type="outflow", then=F("amount")),
+                        output_field=DecimalField(),
+                        default=0,
+                    )
+                ),
+                balance=F("total_inflow") + F("total_outflow"),
+            )
+        )
 
 
 class Transaction(models.Model):

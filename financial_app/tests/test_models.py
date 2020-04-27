@@ -29,6 +29,80 @@ class UserTestCase(TestCase):
         self.assertEquals(User.objects.count(), 1)
 
 
+class GetUserAccountSummaryTest(TestCase):
+    """
+    Test module for user_account_summary mathod
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(name="user", age=18, email="user@example.com")
+        self.tx1 = Transaction.objects.create(
+            reference="000051",
+            account="C00099",
+            date="2001-01-03",
+            amount=-10,
+            type="outflow",
+            category="groceries",
+            user_id=self.user.pk,
+        )
+        self.tx2 = Transaction.objects.create(
+            reference="000052",
+            account="C00099",
+            date="2002-01-10",
+            amount=-10,
+            type="outflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+        self.tx3 = Transaction.objects.create(
+            reference="000053",
+            account="C00099",
+            date="2003-01-10",
+            amount=10,
+            type="inflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+
+        self.tx4 = Transaction.objects.create(
+            reference="000054",
+            account="C00099",
+            date="2004-01-10",
+            amount=10,
+            type="inflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+
+    def test_get_user_account_summary(self):
+
+        self.assertEquals(Transaction.objects.count(), 4)
+
+        # Invalid dates, give me all
+        user_account_summary = self.user.get_user_account_summary(
+            "not a date", "not a date"
+        )
+        dict = user_account_summary[0]
+        balance = dict["balance"]
+        self.assertEquals(0, balance)
+
+        # Valid dates, but give me all
+        user_account_summary = self.user.get_user_account_summary(
+            "01-01-2000", "01-01-2020"
+        )
+        dict = user_account_summary[0]
+        balance = dict["balance"]
+        self.assertEquals(0, balance)
+
+        # Valid dates, but give me one
+        user_account_summary = self.user.get_user_account_summary(
+            "01-01-2000", "31-12-2001"
+        )
+        dict = user_account_summary[0]
+        balance = dict["balance"]
+        self.assertEquals(-10.0, balance)
+
+
 class TransactionTest(TestCase):
     def setUp(self):
         self.user = User.objects.create(name="user", age=18, email="user@example.com")
