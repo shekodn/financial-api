@@ -3,9 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Transaction
 from .serializers import (
-    UserSerializer,
+    AuxGetUserSummaryByCategorySerializer,
     TransactionSerializer,
     UserAccountSummarySerializer,
+    UserSerializer,
 )
 
 # User views
@@ -105,4 +106,16 @@ def get_user_account_summary(request, pk):
         serializer = UserAccountSummarySerializer(
             user, context={"start_date": start_date, "end_date": end_date}
         )
+        return Response(serializer.data)
+
+
+@api_view()
+def get_user_summary_by_category(request, pk):
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        serializer = AuxGetUserSummaryByCategorySerializer(user)
         return Response(serializer.data)
