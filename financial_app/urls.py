@@ -22,9 +22,16 @@ urlpatterns = [
         name="get_post_transactions",
     ),
     # Summary routes
+    # Summary by Account
     url(
         "^api/v1/users/(?P<pk>[0-9]+)/account-summary$",
         views.get_user_account_summary,
         name="get_user_account_summary",
+    ),
+    # Summary by Category
+    url(
+        "^api/v1/users/(?P<pk>[0-9]+)/category-summary$",
+        views.get_user_summary_by_category,
+        name="get_user_summary_by_category",
     ),
 ]

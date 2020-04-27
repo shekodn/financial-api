@@ -47,6 +47,12 @@ class User(models.Model):
             )
         )
 
+    def get_user_summary_by_inflow(self,):
+        return self.transactions.filter(type="inflow")
+
+    def get_user_summary_by_outflow(self):
+        return self.transactions.filter(type="outflow")
+
 
 class Transaction(models.Model):
     """

@@ -31,7 +31,7 @@ class UserTestCase(TestCase):
 
 class GetUserAccountSummaryTest(TestCase):
     """
-    Test module for user_account_summary mathod
+    Test module for user_account_summary method
     """
 
     def setUp(self):
@@ -101,6 +101,62 @@ class GetUserAccountSummaryTest(TestCase):
         dict = user_account_summary[0]
         balance = dict["balance"]
         self.assertEquals(-10.0, balance)
+
+
+class GetUserSummaryByCategoryTest(TestCase):
+    """
+    Test module for get_user_summary_by_category method
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(name="user", age=18, email="user@example.com")
+        self.tx1 = Transaction.objects.create(
+            reference="000051",
+            account="C00099",
+            date="2001-01-03",
+            amount=-10,
+            type="outflow",
+            category="groceries",
+            user_id=self.user.pk,
+        )
+        self.tx2 = Transaction.objects.create(
+            reference="000052",
+            account="C00099",
+            date="2002-01-10",
+            amount=-10,
+            type="outflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+        self.tx3 = Transaction.objects.create(
+            reference="000053",
+            account="C00099",
+            date="2003-01-10",
+            amount=10,
+            type="inflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+
+        self.tx4 = Transaction.objects.create(
+            reference="000054",
+            account="C00099",
+            date="2004-01-10",
+            amount=10,
+            type="inflow",
+            category="salary",
+            user_id=self.user.pk,
+        )
+
+    def test_get_user_account_summary(self):
+
+        self.assertEquals(Transaction.objects.count(), 4)
+
+        summary_by_inflow_dict = self.user.get_user_summary_by_inflow()
+        self.assertEquals(len(summary_by_inflow_dict), 2)
+
+        summary_by_outflow_dict = self.user.get_user_summary_by_outflow()
+        self.assertEquals(len(summary_by_outflow_dict), 2)
 
 
 class TransactionTest(TestCase):

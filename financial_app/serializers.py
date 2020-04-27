@@ -25,3 +25,31 @@ class UserAccountSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["user_account_summary"]
+
+
+class AuxGetUserSummaryByCategorySerializer(serializers.ModelSerializer):
+
+    inflow = serializers.SerializerMethodField()
+    outflow = serializers.SerializerMethodField()
+
+    def get_inflow(self, instance):
+        return GetUserSummaryByCategorySerializer(
+            instance.get_user_summary_by_inflow(), many=True
+        ).data
+
+    def get_outflow(self, instance):
+        return GetUserSummaryByCategorySerializer(
+            instance.get_user_summary_by_outflow(), many=True
+        ).data
+
+    class Meta:
+        model = User
+        fields = ["inflow", "outflow"]
+
+
+class GetUserSummaryByCategorySerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        return {instance.category: instance.amount}
+
+    class Meta:
+        model = Transaction
