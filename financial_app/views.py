@@ -12,6 +12,7 @@ from .serializers import (
 # User views
 @api_view(["GET", "DELETE", "PUT"])
 def get_delete_put_user(request, pk):
+    # Checks if user exists
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -54,6 +55,7 @@ def get_post_users(request):
 # Transaction views
 @api_view(["GET", "DELETE", "PUT"])
 def get_delete_put_transaction(request, pk):
+    # Checks if user exists
     try:
         transaction = Transaction.objects.get(pk=pk)
     except Transaction.DoesNotExist:
@@ -73,28 +75,43 @@ def get_post_transactions(request):
         return Response(serializer.data)
     # insert a new record for a transaction
     elif request.method == "POST":
+        # Checks if it is receiving an array or a single transaction
+        has_many = True if isinstance(request.data, list) else False
 
-        data = {
-            "reference": request.data.get("reference"),
-            "account": request.data.get("account"),
-            "date": request.data.get("date"),
-            "amount": request.data.get("amount"),
-            "type": request.data.get("type"),
-            "category": request.data.get("category"),
-            "user": request.data.get("user_id"),
-        }
+        if has_many:
+            serializer = TransactionSerializer(data=request.data, many=has_many)
+            if serializer.is_valid():
+                try:
+                    serializer.save()
+                except Exception as e:
+                    # Handle Exception
+                    print("Exception: one ore more transaction couldn't be saved")
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = TransactionSerializer(data=data)
+        else:
+            data = {
+                "reference": request.data.get("reference"),
+                "account": request.data.get("account"),
+                "date": request.data.get("date"),
+                "amount": request.data.get("amount"),
+                "type": request.data.get("type"),
+                "category": request.data.get("category"),
+                "user": request.data.get("user_id"),
+            }
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = TransactionSerializer(data=data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Summary views
 @api_view()
 def get_user_account_summary(request, pk):
+    # Checks if user exists
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -111,6 +128,7 @@ def get_user_account_summary(request, pk):
 
 @api_view()
 def get_user_summary_by_category(request, pk):
+    # Checks if user exists
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
