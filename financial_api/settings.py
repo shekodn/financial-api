@@ -78,7 +78,7 @@ WSGI_APPLICATION = "financial_api.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-IS_SQLITE=os.environ["IS_SQLITE"]
+IS_SQLITE = os.environ["IS_SQLITE"]
 
 if IS_SQLITE:
     DATABASES = {

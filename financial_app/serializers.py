@@ -15,6 +15,15 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class UserAccountSummarySerializer(serializers.ModelSerializer):
+    """
+    Description:
+        This serializer calls the get_user_account_summary method and displays
+        data per accoount and according to the business logic.
+    Example:
+        {"account": "C00099", "balance": "1738.87", "total_inflow": "2500.72", "total_outflow": "-761.85"},
+        {"account": "S00012", "balance": "150.72", "total_inflow": "150.72", "total_outflow": "0.00"},
+    """
+
     user_account_summary = serializers.SerializerMethodField()
 
     def get_user_account_summary(self, instance):
@@ -28,6 +37,13 @@ class UserAccountSummarySerializer(serializers.ModelSerializer):
 
 
 class AuxGetUserSummaryByCategorySerializer(serializers.ModelSerializer):
+    """
+    Description:
+        This serializer is a sidekick. What we do here is get the inflow and
+        outflow of user's transactions. After we get them, we call the
+        GetUserSummaryByCategorySerializer in order to display the data
+        according to the business logic.
+    """
 
     inflow = serializers.SerializerMethodField()
     outflow = serializers.SerializerMethodField()
@@ -48,6 +64,12 @@ class AuxGetUserSummaryByCategorySerializer(serializers.ModelSerializer):
 
 
 class GetUserSummaryByCategorySerializer(serializers.ModelSerializer):
+    """
+    Description:
+        This serializer only returns a simple representation in order to comply
+        with the business logic.
+    """
+
     def to_representation(self, instance):
         return {instance.category: instance.amount}
 

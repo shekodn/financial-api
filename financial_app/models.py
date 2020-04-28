@@ -17,12 +17,36 @@ class User(models.Model):
         return f"{self.name} {self.email} {self.age}"
 
     def get_user_account_summary(self, start_date, end_date):
+        """
+        Description:
+            This method filters the user's transactions in order to get a
+            summary. This one shows the balance of the account,
+            the sum of total inflows and total outflows. After we calculate
+            the balance and return the respective account.
+
+        Paramters:
+            start_date (string):
+                If we want to filter by date we need a starting date
+                (eg. 12-01-2020)
+            end_date (string):
+                If we want to filter by date we need an end date
+                (eg. 12-01-2020)
+        Return:
+            A dictionary containing the user_account_summary (total_inflow,
+            total_outflow, balance and account)
+
+        """
+
+        # Tries to get start_date, because end_date might not be present or valid
         try:
             start_date_obj = datetime.datetime.strptime(start_date, "%d-%m-%Y").date()
-            end_date_obj = datetime.datetime.strptime(end_date, "%d-%m-%Y").date()
-
         except:
             start_date_obj = datetime.date(datetime.MINYEAR, 1, 1)
+
+        # Tries to get end_date, because start_date might not be present or valid
+        try:
+            end_date_obj = datetime.datetime.strptime(end_date, "%d-%m-%Y").date()
+        except:
             end_date_obj = datetime.date(datetime.MAXYEAR, 12, 31)
 
         return (
@@ -48,9 +72,23 @@ class User(models.Model):
         )
 
     def get_user_summary_by_inflow(self,):
+        """
+        Description
+            We need to filter our data by category/type. So here we filter
+            by inflow type.
+        Return:
+            A dictionary containing the transactions filtered by inflow
+        """
         return self.transactions.filter(type="inflow")
 
     def get_user_summary_by_outflow(self):
+        """
+        Description
+            We need to filter our data by category/type. So here we filter
+            by outflow type.
+        Return:
+            A dictionary containing the transactions filtered by outflow
+        """
         return self.transactions.filter(type="outflow")
 
 
@@ -75,9 +113,10 @@ class Transaction(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Overrides default save method in order to make sure that:
-            - inflows are always >= 0
-            - outflows are always < 0
+        Description:
+            Overrides default save method in order to make sure that:
+                - inflows are always >= 0
+                - outflows are always < 0
         """
         if self.amount >= 0:
             self.type = "inflow"
