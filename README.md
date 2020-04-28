@@ -1,4 +1,8 @@
 # Financial API
+Welcome to this Financial API project. Here you will be able to analyze some
+financial insights. For example, you are going to be able to see the people's
+inflows and outflows given a period of time. Also you can analyze spending behaviors.
+Keep an eye for version 2 ;)
 
 ## API Structure
 This is the version 1 of the API, so all requests begin
@@ -235,6 +239,9 @@ such as save() method will not being called.
 Do you think we can improve this? If so, PRs are open and I'm more than happy to
 collaborate. After all, if you are reading this you probably know how to contact me ;)
 
+## Limitations
+- When bulk adding, you need to change user_id key for user. Why?
+**Transactions** Serializer is still a work in progress.
 
 ## Tips
 This is **not production ready**. Things such as the debugger and the secret
