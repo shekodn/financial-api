@@ -83,10 +83,10 @@ def get_post_transactions(request):
             if serializer.is_valid():
                 try:
                     serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
                 except Exception as e:
                     # Handle Exception
                     print("Exception: one ore more transactions couldn't be saved")
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         else:
