@@ -111,10 +111,10 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.reference} {self.account} {self.date} {self.amount} {self.type} {self.category} {self.user}"
 
-    def save(self, *args, **kwargs):
+    def __get_type(self):
         """
         Description:
-            Overrides default save method in order to make sure that:
+            Determines type based on amount.
                 - inflows are always >= 0
                 - outflows are always < 0
         """
@@ -122,4 +122,10 @@ class Transaction(models.Model):
             self.type = "inflow"
         else:
             self.type = "outflow"
+
+    def save(self, *args, **kwargs):
+        # Used to override the default save method in order to determine the type
+        # based in the transaction amount
+        self.__get_type()
+
         super(Transaction, self).save(*args, **kwargs)
