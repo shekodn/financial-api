@@ -77,16 +77,27 @@ WSGI_APPLICATION = "financial_api.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-DATABASES = {
-    "default": {
-        "ENGINE": os.environ["DATABASES_ENGINE"],
-        "NAME": os.environ["DATABASES_NAME"],
-        "USER": os.environ["DATABASES_USER"],
-        "PASSWORD": os.environ["DATABASES_PASSWORD"],
-        "HOST": os.environ["DATABASES_HOST"],
-        "PORT": os.environ["DATABASES_PORT"],
+
+IS_SQLITE=os.environ["IS_SQLITE"]
+
+if IS_SQLITE:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ["DATABASES_ENGINE"],
+            "NAME": os.environ["DATABASES_NAME"],
+            "USER": os.environ["DATABASES_USER"],
+            "PASSWORD": os.environ["DATABASES_PASSWORD"],
+            "HOST": os.environ["DATABASES_HOST"],
+            "PORT": os.environ["DATABASES_PORT"],
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
