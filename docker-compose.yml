@@ -1,11 +1,28 @@
 version: '3'
 
 services:
-  postgres:
-    image: postgres:11.5-alpine
+  db:
+    image: postgres
     environment:
-      POSTGRES_DB: financial_api_db
-      POSTGRES_USER: financial_api_user
-      POSTGRES_PASSWORD: 3x4mpl3P455w0rd
+      - POSTGRES_DB=financial_api_db
+      - POSTGRES_USER=financial_api_user
+      - POSTGRES_PASSWORD=3x4mpl3P455w0rd
     ports:
       - "5432:5432"
+
+  api:
+    build: .
+    environment:
+      - DATABASES_ENGINE=django.db.backends.postgresql_psycopg2
+      - DATABASES_NAME=financial_api_db
+      - DATABASES_USER=financial_api_user
+      - DATABASES_PASSWORD=3x4mpl3P455w0rd
+      - DATABASES_HOST=db
+      - DATABASES_PORT=5432
+    # the first time we are using the db, we need to apply the
+    # necessary migrations. Otherwise a simple runserver should be enough.
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
