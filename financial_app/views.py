@@ -78,34 +78,11 @@ def get_post_transactions(request):
         # Checks if it is receiving an array or a single transaction
         has_many = True if isinstance(request.data, list) else False
 
-        if has_many:
-            serializer = TransactionSerializer(data=request.data, many=has_many)
-            if serializer.is_valid():
-                try:
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                except Exception as e:
-                    # Handle Exception
-                    print("Exception: one ore more transactions couldn't be saved")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        else:
-            data = {
-                "reference": request.data.get("reference"),
-                "account": request.data.get("account"),
-                "date": request.data.get("date"),
-                "amount": request.data.get("amount"),
-                "type": request.data.get("type"),
-                "category": request.data.get("category"),
-                "user": request.data.get("user_id"),
-            }
-
-            serializer = TransactionSerializer(data=data)
-
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = TransactionSerializer(data=request.data, many=has_many)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Summary views

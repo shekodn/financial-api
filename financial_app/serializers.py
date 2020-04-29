@@ -8,8 +8,84 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["pk", "name", "email", "age"]
 
 
+class TransactionListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        """
+        Description:
+            Although transactions can be created in bulk, there is a catch.
+            Let's say there are 6 transactions with the following references:
+            "reference": "000051"
+            "reference": "000052"
+            "reference": "000053"
+            "reference": "000054"
+            "reference": "000051" (duplicate)
+            "reference": "000689"
+
+            By design, the API:
+                - Will save the first 4 (000051, 000052, 000053, 000054)
+                - Will not process the one before last (000051), because of an Integrity Error (duplicated key)
+                - Will not process (ignore) the last one (000689)
+                - Will return all the transaction objects (might lead to a bad
+                user (or developer?) experience)
+
+            As a result we need to overwrite create method to only create
+            the ones that are not duplicated. By doing so, the following
+            transactions will be handled: 000051, 000052, 000053, 000054,
+            and 000689. While the duplicated one will be ignored.
+
+        Params:
+            validated_data: Returns the validated incoming data
+
+        Returns:
+            unique_transactions list
+        """
+
+        # list containing all transactions which have been validated
+        all_transactions = [Transaction(**item) for item in validated_data]
+
+        # This helper set will allow us to keep track which
+        # transactions (using tx.reference) are unique.
+        unique_transactions_helper_set = set()
+        unique_transactions = []
+        for tx in all_transactions:
+            if tx.reference not in unique_transactions_helper_set:
+                unique_transactions.append(tx)
+                unique_transactions_helper_set.add(tx.reference)
+        return Transaction.objects.bulk_create(unique_transactions)
+
+
 class TransactionSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, data):
+        """
+        Description:
+            TL;DR: Maps "user_id" json key to "user" attribute in Transaction Model.
+
+            Overrides implementation of to_internal_value() method. We do this
+            in order to map the "user_id" key name we receive in our request with
+            "user" (our Transaction attribute name). We did the override in
+            this method in particular, because we need to take the
+            unvalidated incoming data as input. If we don't do it here, a
+            validation error will raise, because transactions need to have a user.
+        Parameter:
+            data (dict): dict containing the data of the request
+        Return:
+            data (dict): dictionary of validated data
+        """
+        data = {
+            "reference": data.get("reference"),
+            "account": data.get("account"),
+            "date": data.get("date"),
+            "amount": data.get("amount"),
+            "type": data.get("type"),
+            "category": data.get("category"),
+            "user": data.get("user_id"),
+        }
+
+        ret = super().to_internal_value(data)
+        return ret
+
     class Meta:
+        list_serializer_class = TransactionListSerializer
         model = Transaction
         fields = ["reference", "account", "date", "amount", "type", "category", "user"]
 

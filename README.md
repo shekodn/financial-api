@@ -27,7 +27,7 @@ with ``` /api/v1/<the-endpoint> ```
 ### Users
 
 #### Endpoint /api/v1/users
-You can create users by receiving: name, email and age.
+You can create users by receiving: name, email (unique) and age.
 
 
 #### Input:
@@ -47,7 +47,7 @@ You can create users by receiving: name, email and age.
 
 
 #### Endpoint  /api/v1/users
-You can see all users
+You can list all users.
 
 
 #### Output:
@@ -87,7 +87,7 @@ Also, you can see the details of a specific user.
 ### Transactions
 
 #### Endpoint /api/v1/transactions/
-You can create users' transactions. Each transaction has: reference
+You can create users' transactions. Each transaction has: a reference
 (unique), account, date, amount, type, category and is related to a user.
 
 
@@ -111,14 +111,14 @@ You can create users' transactions. Each transaction has: reference
 
 #### Remember:
 - A transaction reference is unique.
-- There are only two type of transactions: inflow and outflow.
+- There are only two types of transaction: inflow and outflow.
 - All outflow transactions amounts are negative decimal numbers.
 - All inflow transactions amounts are positive decimal numbers.
-- We expect to receive transactions in bulk as well.
-- The transactions we receive could be already in our system, thus we need to avoid duplicating them in our database.
+- We are prepared to receive transactions in bulk as well.
+- The transactions we receive could be already in our system, thus we avoid duplicating them in our database.
 
 ### Summaries
-This is the interesting part. Here we are going to be able to have some insights
+This is the interesting part. Here we are going to be able to obtain some insights
 related to our users and their behavior with money.
 
 #### Account Summary
@@ -214,38 +214,14 @@ To run them, all you need to do is ``` python manage.py test ```
 
 
 ## Bug or Feature?
-Although transactions can be created in bulk, there is a catch.
-Let's say there are 6 transactions:
+Do you think we can improve this API? I'm sure you do. PRs are open and
+I'm more than happy to collaborate. After all, if you are reading this you
+probably know how to contact me ;)
 
-```
-[
- {"reference": "000051", "account": "C00099", "date": "2020-01-03", "amount": "-51.13", "type": "outflow", "category": "groceries", "user": 1},
- {"reference": "000052", "account": "C00099", "date": "2020-01-10", "amount": "2500.72", "type": "inflow", category": "salary", "user": 1},
- {"reference": "000053", "account": "C00099", "date": "2020-01-10", "amount": "-150.72", "type": "outflow", category": "transfer", "user": 1},
- {"reference": "000054", "account": "C00099", "date": "2020-01-13", "amount": "-560.00", "type": "outflow", "category": "rent", "user": 1},
- {"reference": "000051", "account": "C00099", "date": "2020-01-04", "amount": "-51.13", "type": "outflow", "category": "other", "user": 1},
- {"reference": "000689", "account": "S00012", "date": "2020-01-10", "amount": "150.72", "type": "inflow", "category": "savings" ,"user": 1},
-]
-```
-By design, the API will:
-- Save the first 4 (000051, 000052, 000053, 000054)
-- Will not process the one before last (000051), because of an Integrity Error (duplicate key)
-- Will not process (ignore) the last one (000689)
-
-I thought about using [bulk_create](https://docs.djangoproject.com/en/dev/ref/models/querysets/#django.db.models.query.QuerySet.bulk_create),
-but in Django's development version, also using bulk_create "has a number of caveats though"
-such as save() method will not being called.
-
-Do you think we can improve this? If so, PRs are open and I'm more than happy to
-collaborate. After all, if you are reading this you probably know how to contact me ;)
-
-## Limitations
-- When bulk adding, you need to change user_id key for user. Why?
-**Transactions** Serializer is still a work in progress.
 
 ## Tips
-This is **not production ready**. Things such as the debugger and the secret
-are out there in the plain. Also, make sure to add some other components such
-as authentication, authorization, a rate-limiter, and logging. If you want to
-know a little bit more about why you need to do it click
-[here](https://shekodn.github.io/blog/securing-apis-how-to-design-a-not-so-crapi-one.html).
+This is **not production ready**. Things such as the debugger are set and we still
+the need to change important vars such as the secret one. Also, make sure to
+add some other components such as authentication, authorization,
+a rate-limiter, and logging. If you want to know a little bit more about why you
+need to do it click [here](https://shekodn.github.io/blog/securing-apis-how-to-design-a-not-so-crapi-one.html).
